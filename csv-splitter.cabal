@@ -1,0 +1,16 @@
+name:                csv-splitter
+version:             0.1.0.0
+synopsis:            Splits CSVs into fractional segment files
+homepage:            https://github.com/AlainODea-haskell/contact-segment
+license:             Apache-2.0
+license-file:        LICENSE
+author:              Alain O'Dea
+maintainer:          alain.odea@gmail.com
+category:            Data
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable split-csv
+  main-is:             Main.hs
+  build-depends:       base ==4.7.*
+                     , text
