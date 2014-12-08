@@ -13,13 +13,18 @@ main = do
 mainWithArgs :: [String] -> IO ()
 mainWithArgs args = do
   csvData <- TL.readFile csvFile
-  split fractions csvData csvFile
+  split (map segmentFraction fractions) csvData csvFile
   where csvFile = headNote "USAGE: split-csv <csvfile> [fraction...]" args
         fractions = tailNote "ERROR: no csvfile was specified" args
 
-split :: [String] -> TL.Text -> String -> IO ()
-split fractions csvData csvFile =
-    forM_ (segmentedRowsAndIndices fractions csvLines) (\(rowsSegment,index) ->
+segmentFraction :: String -> Rational
+segmentFraction = read . map convertFraction
+  where convertFraction '/' = '%'
+        convertFraction x = x
+
+split :: [Rational] -> TL.Text -> String -> IO ()
+split segmentFractions csvData csvFile =
+    forM_ (segmentedRowsAndIndices segmentFractions csvLines) (\(rowsSegment,index) ->
                                  if not $ null rowsSegment then
                                    do
                                     let csvSegmentFile = csvFile ++ show index ++ ".csv"
@@ -33,8 +38,8 @@ split fractions csvData csvFile =
       where header = headNote "ERROR: csv file was empty" csvLines
             csvLines = TL.lines csvData
 
-segmentedRowsAndIndices :: [String] -> [TL.Text] -> [([TL.Text],Int)]
-segmentedRowsAndIndices fractions csvLines = zip segmentedRows [0..]
+segmentedRowsAndIndices :: [Rational] -> [TL.Text] -> [([TL.Text],Int)]
+segmentedRowsAndIndices segmentFractions csvLines = zip segmentedRows [0..]
   where segmentedRows = map (\x ->
                                   take (fromIntegral (snd x)) $
                                   drop (fromIntegral (fst x)) rows)
@@ -46,9 +51,3 @@ segmentedRowsAndIndices fractions csvLines = zip segmentedRows [0..]
                             (\x -> x * toRational count)
                            ) segmentFractions
         count = length rows
-        segmentFractions = map (readRational . map
-                                (\x -> case x of
-                                            '/' -> '%'
-                                            _ -> x)
-                               ) fractions
-        readRational x = read x :: Rational
